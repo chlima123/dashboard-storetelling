@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vendas · outubro de 2026</title>
+<style>
+  :root{
+    --accent:#6C4CE0;          /* 1 cor de destaque — troque aqui */
+    --neg:#D92D20;             /* fora da meta */
+    --ink:#1C1C1E; --muted:#6E6E73;
+    --line:#E5E5EA; --ctx:#D6D6DD; --bg:#F5F5F7; --card:#FFFFFF;
+    --gap:16px; --r:12px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:14px/1.4 Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif}
+  .wrap{max-width:1280px;margin:0 auto;padding:24px}
+
+  /* ---------- header: título com período + filtro único ---------- */
+  header{display:flex;align-items:center;justify-content:space-between;gap:var(--gap);margin-bottom:var(--gap)}
+  h1{font-size:22px;font-weight:600;letter-spacing:-.01em;margin:0}
+  .filter{appearance:none;border:1px solid var(--line);background:var(--card);color:var(--ink);
+          border-radius:8px;padding:8px 12px;font:inherit;font-size:13px;cursor:pointer}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+  .card h2{font-size:13px;font-weight:600;color:var(--muted);margin:0 0 12px;letter-spacing:0}
+
+  /* ---------- regra 2: resumo no topo, todo nº com comparador ---------- */
+  .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--gap);margin-bottom:var(--gap)}
+  .kpi{display:flex;flex-direction:column;justify-content:space-between;min-height:112px}
+  .kpi .label{font-size:13px;color:var(--muted)}
+  .kpi .value{font-size:30px;font-weight:650;letter-spacing:-.02em;line-height:1.1;margin:6px 0 8px}
+  .kpi .delta{font-size:13px;font-weight:600}
+  .delta.up{color:var(--accent)} .delta.down{color:var(--neg)}
+  .kpi svg{display:block;margin-top:4px}
+
+  /* ---------- regra 4: tendência em barras, meta desenhada ---------- */
+  .trend{position:relative;margin-bottom:var(--gap)}
+  .bars{display:flex;align-items:flex-end;gap:10px;height:180px;padding-top:22px;
+        border-bottom:1px solid var(--line);position:relative}
+  .b{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;position:relative}
+  .b i{display:block;width:100%;background:var(--ctx);border-radius:4px 4px 0 0}
+  .b.now i{background:var(--accent)}
+  .b span{position:absolute;top:-18px;left:0;right:0;text-align:center;font-size:11px;font-weight:600;color:var(--accent)}
+  .xaxis{display:flex;gap:10px;margin-top:6px}
+  .xaxis em{flex:1;text-align:center;font-style:normal;font-size:11px;color:var(--muted)}
+  .plot{position:absolute;top:22px;left:0;right:0;bottom:0;pointer-events:none;z-index:2}
+  .meta{position:absolute;left:0;right:0;border-top:1.5px dashed #9A9AA2;pointer-events:none}
+  .meta b{position:absolute;left:0;top:-18px;font-size:11px;font-weight:600;color:var(--muted);
+           background:var(--card);padding:0 4px}
+
+  /* ---------- regra 3: detalhe na base, duas colunas alinhadas ---------- */
+  .row2{display:grid;grid-template-columns:1.4fr 1fr;gap:var(--gap)}
+  .hrow{display:grid;grid-template-columns:74px 1fr 40px;align-items:center;gap:10px;margin-bottom:8px}
+  .hrow .name{font-size:12px;color:var(--muted)}
+  .track{height:14px;background:#F0F0F3;border-radius:4px;overflow:hidden}
+  .fill{height:100%;background:var(--ctx);border-radius:4px}
+  .hrow.lead .fill{background:var(--accent)}
+  .hrow.lead .name{color:var(--ink);font-weight:600}
+  .hrow .val{font-size:12px;font-variant-numeric:tabular-nums;text-align:right}
+
+  .goal{display:flex;flex-direction:column;justify-content:center}
+  .goal .pct{font-size:34px;font-weight:650;color:var(--accent);letter-spacing:-.02em;line-height:1}
+  .goal .sub{font-size:12px;color:var(--muted);margin:2px 0 14px}
+  .gtrack{height:12px;background:#F0F0F3;border-radius:999px;overflow:hidden}
+  .gfill{height:100%;width:86%;background:var(--accent);border-radius:999px}
+  .goal .pace{font-size:12px;color:var(--muted);margin-top:10px}
+
+  footer{margin-top:var(--gap);font-size:11px;color:var(--muted)}
+
+  @media (max-width:900px){
+    .kpis{grid-template-columns:1fr}
+    .row2{grid-template-columns:1fr}
+    .kpi{min-height:0}
+  }
+  @media print{body{background:#fff}.wrap{max-width:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ===== DADOS (troque só aqui) ===== -->
+  <!-- mes:1.240 = out/26 | metaMes = 1.050 | metaAno = 12,6 mi | pctAno = 86 | paceAno = 83 -->
+
+  <header>
+    <h1>Vendas · outubro de 2026</h1>
+    <select class="filter" aria-label="Período">
+      <option>Out/26</option>
+    </select>
+  </header>
+
+  <!-- REGRA 2 — resumo: 3 KPIs, cada um com % vs META -->
+  <section class="kpis">
+    <div class="card kpi">
+      <div class="label">Vendas no mês</div>
+      <div class="value">R$ 1,24 mi</div>
+      <div class="delta up">▲ 18% vs meta</div>
+      <svg width="100%" height="18" viewBox="0 0 120 18" preserveAspectRatio="none" aria-hidden="true">
+        <polyline points="0,14 15,12 30,13 45,9 60,10 75,7 90,8 105,4 120,3" fill="none" stroke="#D6D6DD" stroke-width="1.5"/>
+      </svg>
+    </div>
+    <div class="card kpi">
+      <div class="label">Pedidos</div>
+      <div class="value">4.650</div>
+      <div class="delta up">▲ 13% vs meta</div>
+      <svg width="100%" height="18" viewBox="0 0 120 18" preserveAspectRatio="none" aria-hidden="true">
+        <polyline points="0,13 15,13 30,11 45,12 60,9 75,9 90,6 105,5 120,4" fill="none" stroke="#D6D6DD" stroke-width="1.5"/>
+      </svg>
+    </div>
+    <div class="card kpi">
+      <div class="label">Clientes novos</div>
+      <div class="value">380</div>
+      <div class="delta down">▼ 15% vs meta</div>
+      <svg width="100%" height="18" viewBox="0 0 120 18" preserveAspectRatio="none" aria-hidden="true">
+        <polyline points="0,4 15,6 30,5 45,8 60,7 75,10 90,9 105,12 120,13" fill="none" stroke="#D6D6DD" stroke-width="1.5"/>
+      </svg>
+    </div>
+  </section>
+
+  <!-- REGRA 4 + 5 — tendência: barras, cinza = contexto, cor = out/26; meta tracejada -->
+  <section class="card trend">
+    <h2>Vendas por mês (R$ mil)</h2>
+    <div class="bars">
+      <!-- meta mensal: 1.050 de 1.300 de teto visual = 80,8% -->
+      <div class="plot"><div class="meta" style="bottom:80.4%"><b>meta 1.050</b></div></div>
+      <div class="b"><i style="height:66%"></i></div>
+      <div class="b"><i style="height:69%"></i></div>
+      <div class="b"><i style="height:73%"></i></div>
+      <div class="b"><i style="height:67%"></i></div>
+      <div class="b"><i style="height:78%"></i></div>
+      <div class="b"><i style="height:74%"></i></div>
+      <div class="b"><i style="height:81%"></i></div>
+      <div class="b"><i style="height:76%"></i></div>
+      <div class="b"><i style="height:84%"></i></div>
+      <div class="b now"><i style="height:95%"></i><span>1.240</span></div>
+    </div>
+    <div class="xaxis">
+      <em>Jan</em><em>Fev</em><em>Mar</em><em>Abr</em><em>Mai</em>
+      <em>Jun</em><em>Jul</em><em>Ago</em><em>Set</em><em>Out</em>
+    </div>
+  </section>
+
+  <!-- REGRA 3 — base: detalhe ordenado + meta com barra de progresso (sem velocímetro) -->
+  <section class="row2">
+    <div class="card">
+      <h2>Vendas por região (R$ mil)</h2>
+      <div class="hrow lead"><span class="name">Sudeste</span><span class="track"><span class="fill" style="width:100%"></span></span><span class="val">520</span></div>
+      <div class="hrow"><span class="name">Nordeste</span><span class="track"><span class="fill" style="width:48%"></span></span><span class="val">250</span></div>
+      <div class="hrow"><span class="name">Sul</span><span class="track"><span class="fill" style="width:40%"></span></span><span class="val">210</span></div>
+      <div class="hrow"><span class="name">C.-Oeste</span><span class="track"><span class="fill" style="width:29%"></span></span><span class="val">150</span></div>
+      <div class="hrow"><span class="name">Norte</span><span class="track"><span class="fill" style="width:21%"></span></span><span class="val">110</span></div>
+    </div>
+
+    <div class="card goal">
+      <h2>Meta do ano (R$ 12,6 mi)</h2>
+      <div class="pct">86%</div>
+      <div class="sub">da meta do ano</div>
+      <div class="gtrack"><div class="gfill"></div></div>
+      <div class="pace">esperado até out: 83% · <strong>no ritmo</strong></div>
+    </div>
+  </section>
+
+  <footer>Dados de exemplo · loja fictícia</footer>
+</div>
+</body>
+</html>
